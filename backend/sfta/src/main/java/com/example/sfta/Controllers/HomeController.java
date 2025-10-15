@@ -1,6 +1,8 @@
 package com.example.sfta.Controllers;
 
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.sfta.Config.JwUtil;
 import com.example.sfta.DTO.LoginRequest;
 import com.example.sfta.model.User;
 import com.example.sfta.repository.AccountsRepository;
@@ -29,6 +31,9 @@ private AccountsRepository accountsRepository;
 @Autowired
 private BCryptPasswordEncoder passwordEncoder;
 
+@Autowired
+private JwUtil jwUtil;
+
 @GetMapping("/users")
 public String getUsers() {
     return userRepository.findAll().toString();
@@ -52,8 +57,11 @@ public ResponseEntity<String> auth(@RequestBody LoginRequest request) {
     if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(passwordEncoder.encode(request.getPassword()) +"++"+ user.getPassword());
     }
-   
-   return ResponseEntity.ok("Login Successful");
+  
+    String token = jwUtil.generateToken(user.getUsername());
+
+
+   return ResponseEntity.ok(token);
      
 }
 
