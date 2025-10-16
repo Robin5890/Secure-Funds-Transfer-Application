@@ -1,10 +1,14 @@
 package com.example.sfta.Config;
 
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
@@ -20,14 +24,27 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
-        .csrf(csrf -> csrf.disable())  // disable CSRF for testing
+        .csrf(csrf -> csrf.disable())  
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/login", "/users", "/accounts").permitAll() // public endpoints
-            .anyRequest().authenticated() // everything else requires auth
+            .requestMatchers("/login", "/users", "/accounts", "/auth").permitAll() 
+            .anyRequest().authenticated() 
         )
-        .formLogin(form -> form.disable()); // disable default login page
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .formLogin(form -> form.disable()); 
 
     return http.build();
+}
+
+@Bean
+public UrlBasedCorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowedOrigins(Arrays.asList("http://localhost:4200")); 
+    config.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization"));
+    config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    config.setAllowCredentials(true); 
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
 }
 
 
