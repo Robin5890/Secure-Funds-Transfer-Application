@@ -2,16 +2,21 @@ package com.example.sfta.Config;
 
 import java.util.Arrays;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
+
+    @Autowired
+    private JWTFilter jwtFilter;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder(){
@@ -26,11 +31,13 @@ public class SecurityConfig {
     http
         .csrf(csrf -> csrf.disable())  
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/login", "/users", "/accounts", "/auth").permitAll() 
+            .requestMatchers("/login","/auth").permitAll() 
             .anyRequest().authenticated() 
         )
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        .formLogin(form -> form.disable()); 
+        .formLogin(form -> form.disable());
+        
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
 }

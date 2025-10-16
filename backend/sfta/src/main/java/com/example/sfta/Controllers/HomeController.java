@@ -11,11 +11,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.sfta.Config.JwUtil;
 import com.example.sfta.DTO.LoginRequest;
+import com.example.sfta.DTO.UserData;
+import com.example.sfta.model.Account;
 import com.example.sfta.model.User;
 import com.example.sfta.repository.AccountsRepository;
 import com.example.sfta.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+
 
 
 
@@ -78,6 +82,38 @@ public boolean checkToken(HttpServletRequest request) {
     return jwUtil.isTokenValid(token);
 }
 
+@GetMapping("/getUserData")
+public ResponseEntity<UserData> userData(HttpServletRequest request) {
+
+        
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String token = header.substring(7);
+
+        if (!jwUtil.isTokenValid(token)) {
+            return ResponseEntity.status(401).build();
+        }
+
+
+        String username = jwUtil.extractUsername(token);
+
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(404).build();
+        }
+
+        Account account = accountsRepository.findByUser(user).orElse(null);
+        if (account == null) {
+            return ResponseEntity.status(404).build();
+        }
+
+        UserData dto = new UserData(user.getUsername(), account.getBalance());
+
+        return ResponseEntity.ok(dto);
+}
 
 
 
