@@ -1,9 +1,11 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router, RouterOutlet } from '@angular/router';
+import { Router } from '@angular/router';
 import { CookieService } from 'ngx-cookie-service'; 
-import { Token } from '@angular/compiler';
+import { environment } from '../../../environments/environment.development';
+
+
 
 @Component({
   selector: 'app-login',
@@ -21,16 +23,23 @@ export class Login implements OnInit{
     
 
  ngOnInit(): void {
-    this.userForm = new FormGroup({
-      username: new FormControl('', [Validators.required]),
-      password: new FormControl('', [Validators.required])
-    })
+
+  const token1 = this.cookieService.get('jwt');
+
+  if(token1){
+    this.router.navigate(["/transfer"]);
   }
+    
+    this.userForm = new FormGroup({
+          username: new FormControl('', [Validators.required]),
+          password: new FormControl('', [Validators.required])
+        })
+     }
 
   onSubmit(){
             
   if (this.userForm.valid) {
-      this.http.post('http://localhost:8080/login', this.userForm.value, { responseType: 'text', withCredentials: true })
+      this.http.post(`${environment.apiUrl}/login`, this.userForm.value, { responseType: 'text', withCredentials: true })
         .subscribe({
           next:(token: string) => {
             console.log("Login Successful");
