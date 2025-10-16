@@ -1,5 +1,12 @@
 package com.example.sfta.Controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.sfta.Config.JwUtil;
@@ -8,13 +15,8 @@ import com.example.sfta.model.User;
 import com.example.sfta.repository.AccountsRepository;
 import com.example.sfta.repository.UserRepository;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.servlet.http.HttpServletRequest;
+
 
 
 
@@ -64,6 +66,18 @@ public ResponseEntity<String> auth(@RequestBody LoginRequest request) {
    return ResponseEntity.ok(token);
      
 }
+
+
+@GetMapping("/auth")
+public boolean checkToken(HttpServletRequest request) {
+    String header = request.getHeader("Authorization");
+    if (header == null || !header.startsWith("Bearer ")) {
+        return false;
+    }
+    String token = header.substring(7);
+    return jwUtil.isTokenValid(token);
+}
+
 
 
 
