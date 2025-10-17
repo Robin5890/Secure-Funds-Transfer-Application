@@ -1,5 +1,7 @@
 package com.example.sfta.Controllers;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,22 +56,19 @@ public String getAccounts() {
 
 
 @PostMapping("/login")
-public ResponseEntity<String> auth(@RequestBody LoginRequest request) {
+public ResponseEntity<Map<String, String>> auth(@RequestBody LoginRequest request) {
    
     User user = userRepository.findByUsername(request.getUsername()).orElse(null);
 
-    if(user == null){
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+    if(user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())){
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid username or password"));
     }
    
-    if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(passwordEncoder.encode(request.getPassword()) +"++"+ user.getPassword());
-    }
   
     String token = jwUtil.generateToken(user.getUsername());
 
 
-   return ResponseEntity.ok(token);
+   return ResponseEntity.ok(Map.of("message", "Login successful", "token", token));
      
 }
 
@@ -112,17 +111,17 @@ public ResponseEntity<UserData> userData(HttpServletRequest request) {
 
 @PostMapping("/transfer")
 @Transactional
-public ResponseEntity<String> transferBalance(@RequestBody TransferRequest request, HttpServletRequest serverRequest) {
+public ResponseEntity<Map<String, String>> transferBalance(@RequestBody TransferRequest request, HttpServletRequest serverRequest) {
    
     String header = serverRequest.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(401).body(Map.of("message", "Missing or invalid token"));
         }
 
         String token = header.substring(7);
 
         if (!jwUtil.isTokenValid(token)) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(401).body(Map.of("message", "Invalid token"));
         }
 
 
@@ -130,21 +129,21 @@ public ResponseEntity<String> transferBalance(@RequestBody TransferRequest reque
 
         User user = userRepository.findByUsername(username).orElse(null);
         if (user == null) {
-            return ResponseEntity.status(404).build();
+            return ResponseEntity.status(404).body(Map.of("message", "User not found"));
         }
 
         Account senderAccount = accountsRepository.findByUser(user).orElse(null);
         if (senderAccount == null) {
-            return ResponseEntity.status(404).build();
+            return ResponseEntity.status(404).body(Map.of("message", "Sender account not found"));
         }
 
         Account receiverAccount = accountsRepository.findByAccountNumber(request.getRecipientID()).orElse(null);
         if (receiverAccount == null) {
-            return ResponseEntity.status(404).build();
+            return ResponseEntity.status(404).body(Map.of("message", "Recipient account not found"));
         }
 
         if (request.getAmount() == null || senderAccount.getBalance().compareTo(request.getAmount()) < 0) {
-    return ResponseEntity.badRequest().body("Invalid or insufficient amount");
+            return ResponseEntity.badRequest().body(Map.of("message", "Invalid or insufficient amount"));
 }
 
 
@@ -154,7 +153,7 @@ public ResponseEntity<String> transferBalance(@RequestBody TransferRequest reque
         accountsRepository.save(senderAccount);
         accountsRepository.save(receiverAccount);
 
-        return ResponseEntity.ok("Transfer complete");
+        return ResponseEntity.ok(Map.of("message", "Transfer complete"));
 }
 
 
