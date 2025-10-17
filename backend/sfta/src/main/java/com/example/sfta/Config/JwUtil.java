@@ -1,5 +1,6 @@
 package com.example.sfta.Config;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
@@ -7,13 +8,13 @@ import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwUtil {
 
-    public static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private static final String SECRET = "cB2pCDD19BfjgiR9Tsw40j6zyNz0uhxZ";
+    private static final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
     public static final long EXPIRATION_TIME = 1000 * 60 * 60;
 
     public String generateToken(String username){

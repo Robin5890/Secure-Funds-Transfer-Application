@@ -20,8 +20,8 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String account_number;
+    @Column(nullable = false, unique = true, length = 50, name = "account_number")
+    private String accountNumber;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO;
@@ -44,12 +44,12 @@ public class Account {
         this.id = id;
     }
 
-    public String getAccount_number() {
-        return account_number;
+    public String getAccountnumber() {
+        return accountNumber;
     }
 
-    public void setAccount_number(String account_number) {
-        this.account_number = account_number;
+    public void setAccountnumber(String accountNumber) {
+        this.accountNumber = accountNumber;
     }
 
     public BigDecimal getBalance() {
