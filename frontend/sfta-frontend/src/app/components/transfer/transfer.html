@@ -1,3 +1,38 @@
-<p>transfer works!</p>
-<p>{{ username }}</p>
-<p>{{ balance }}</p>
+
+<p>Welcome, {{ username }}!</p>
+<p>Current Balance: ${{ balance }}</p>
+
+<p>Tranfer Balance</p>
+
+
+<form [formGroup]="transferForm" (ngSubmit)="onSubmit()">
+  <label for="recipientID">Recipient Account Number</label>
+  <input type="text" id="recipientID" formControlName="recipientID">
+
+  @if (transferForm.get('recipientID')?.touched && transferForm.get('recipientID')?.invalid) {
+  @if (transferForm.get('recipientID')?.hasError('required')) {
+    <small>Recipient ID is required</small>
+  } @else if (transferForm.get('recipientID')?.hasError('pattern')) {
+    <small>Only letters and numbers allowed</small>
+  }
+}
+
+  <br>
+
+  <label for="Amount">Amount</label>
+  <input type="number" id="Amount" formControlName="Amount">
+
+  @if (transferForm.get('Amount')?.touched && transferForm.get('Amount')?.invalid) {
+    @if (transferForm.get('Amount')?.hasError('required')) {
+      <small>Amount is required</small>
+    } @else if (transferForm.get('Amount')?.hasError('pattern')) {
+      <small>Only positive numbers allowed</small>
+    } @else if (transferForm.get('Amount')?.hasError('min')) {
+      <small>Amount must be greater than 0</small>
+    }
+  }
+  <br>
+
+  <button type="submit" [disabled]="transferForm.invalid">Submit Transfer</button>
+</form>
+

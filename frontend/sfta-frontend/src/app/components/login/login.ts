@@ -16,6 +16,7 @@ import { environment } from '../../../environments/environment.development';
 export class Login implements OnInit{
 
   userForm!: FormGroup;
+  showform = false;
 
  http = inject(HttpClient);
  router = inject(Router); 
@@ -28,8 +29,9 @@ export class Login implements OnInit{
 
   if(token1){
     this.router.navigate(["/transfer"]);
+    return;
   }
-    
+    this.showform = true;
     this.userForm = new FormGroup({
           username: new FormControl('', [Validators.required]),
           password: new FormControl('', [Validators.required])
