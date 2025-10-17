@@ -50,11 +50,15 @@ onSubmit() {
   const { recipientID, Amount } = this.transferForm.value;
   const token = this.cookie.get('jwt');
 
-  this.http.post(`${environment.apiUrl}/transfer`, { recipientID, Amount }, {
+  this.http.post(`${environment.apiUrl}/transfer`, { recipientID, amount: Amount }, {
     headers: { Authorization: `Bearer ${token}` },
-    withCredentials: true
+    withCredentials: true,
+    responseType: 'text'
   }).subscribe({
-    next: res => console.log('Transfer successful', res),
+    next: res => {console.log('Transfer successful', res);
+      this.transferForm.reset();
+      this.balance -= Amount;
+    },
     error: err => console.error('Transfer failed', err)
   });
 }
