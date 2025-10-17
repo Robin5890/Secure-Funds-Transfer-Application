@@ -16,6 +16,7 @@ export class Transfer implements OnInit{
 
   username: string = '';
   balance: number = 0;
+  errorMessage: string = '';
 
   transferForm!: FormGroup;
 
@@ -50,16 +51,17 @@ onSubmit() {
   const { recipientID, Amount } = this.transferForm.value;
   const token = this.cookie.get('jwt');
 
-  this.http.post(`${environment.apiUrl}/transfer`, { recipientID, amount: Amount }, {
+  this.http.post<{message: string}>(`${environment.apiUrl}/transfer`, { recipientID, amount: Amount }, {
     headers: { Authorization: `Bearer ${token}` },
-    withCredentials: true,
-    responseType: 'text'
+    withCredentials: true
   }).subscribe({
-    next: res => {console.log('Transfer successful', res);
+    next: data => {
+      this.errorMessage = data.message;
       this.transferForm.reset();
       this.balance -= Amount;
     },
-    error: err => console.error('Transfer failed', err)
+    error: err => this.errorMessage = err.error.message || 'Transfer Failed'
+
   });
 }
 

@@ -17,6 +17,7 @@ export class Login implements OnInit{
 
   userForm!: FormGroup;
   showform = false;
+  errorMessage = '';
 
  http = inject(HttpClient);
  router = inject(Router); 
@@ -25,9 +26,9 @@ export class Login implements OnInit{
 
  ngOnInit(): void {
 
-  const token1 = this.cookieService.get('jwt');
+  const token = this.cookieService.get('jwt');
 
-  if(token1){
+  if(token){
     this.router.navigate(["/transfer"]);
     return;
   }
@@ -41,14 +42,25 @@ export class Login implements OnInit{
   onSubmit(){
             
   if (this.userForm.valid) {
-      this.http.post(`${environment.apiUrl}/login`, this.userForm.value, { responseType: 'text', withCredentials: true })
+      this.http.post<any>(`${environment.apiUrl}/login`, this.userForm.value, { withCredentials: true })
         .subscribe({
-          next:(token: string) => {
-            console.log("Login Successful");
-            this.cookieService.set('jwt', token, 1, '/');
-            this.router.navigate(['transfer']);
+          next:(data) => {
+            this.errorMessage = data.message || 'Login successful';
+            console.log(data.message);
+            if(data.token){
+              this.cookieService.set('jwt', data.token, 1, '/');
+              this.router.navigate(['transfer']);
+            }
           },
-          error: err => console.error('Login failed:', err)
+          error: (err) => {
+            if(err.status === 401){
+              this.errorMessage = err.error.message || 'Invalid username or password';
+            }else{
+              this.errorMessage = 'An error occured.';
+            }
+            console.error('Login failed', err);
+            
+          }
         });
     }
   }
