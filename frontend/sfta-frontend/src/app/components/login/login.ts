@@ -50,7 +50,12 @@ export class Login implements OnInit{
             this.feedBackExists = true;
             console.log(data.message);
             if(data.token){
-              this.cookieService.set('jwt', data.token, 1, '/');
+              this.cookieService.set('jwt', data.token,{
+                expires: 1,
+                path: '/',
+                secure: true,
+                sameSite: 'Strict'
+              });
               this.router.navigate(['transfer']);
             }
           },
