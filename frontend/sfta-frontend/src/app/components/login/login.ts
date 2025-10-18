@@ -18,6 +18,7 @@ export class Login implements OnInit{
   userForm!: FormGroup;
   showform = false;
   errorMessage = '';
+  feedBackExists = false;
 
  http = inject(HttpClient);
  router = inject(Router); 
@@ -46,6 +47,7 @@ export class Login implements OnInit{
         .subscribe({
           next:(data) => {
             this.errorMessage = data.message || 'Login successful';
+            this.feedBackExists = true;
             console.log(data.message);
             if(data.token){
               this.cookieService.set('jwt', data.token, 1, '/');
@@ -55,13 +57,18 @@ export class Login implements OnInit{
           error: (err) => {
             if(err.status === 401){
               this.errorMessage = err.error.message || 'Invalid username or password';
+              
             }else{
               this.errorMessage = 'An error occured.';
             }
+            this.feedBackExists = true;
             console.error('Login failed', err);
             
           }
         });
+    }else{
+      this.errorMessage = 'Please fill out all the fields';
+      this.feedBackExists = true;
     }
   }
 

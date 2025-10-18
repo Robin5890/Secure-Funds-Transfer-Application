@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment.development';
 import { CookieService } from 'ngx-cookie-service';
 import { FormControl, FormGroup, Validators, ɵInternalFormsSharedModule, ReactiveFormsModule } from "@angular/forms";
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-transfer',
   imports: [ɵInternalFormsSharedModule, ReactiveFormsModule],
@@ -13,12 +14,13 @@ export class Transfer implements OnInit{
 
   http = inject(HttpClient);
   cookie = inject(CookieService);
+  router = inject(Router);
 
   username: string = '';
   balance: number = 0;
   errorMessage: string = '';
-
   transferForm!: FormGroup;
+  feedBackExists = false;
 
   ngOnInit(): void {
     const token = this.cookie.get('jwt');
@@ -37,32 +39,44 @@ export class Transfer implements OnInit{
 
   this.transferForm = new FormGroup({
     recipientID: new FormControl('', [Validators.required, Validators.pattern('^[A-Za-z0-9]+$')]),
-    Amount: new FormControl('', [Validators.required, Validators.pattern('^[0-9]+(\\.[0-9]+)?$') , Validators.min(1)])
+    amount: new FormControl('', [Validators.required, Validators.pattern('^[0-9]+(\\.[0-9]+)?$') , Validators.min(1)])
   })
 
 }
 
 onSubmit() {
+
   if (this.transferForm.invalid) {
-    this.transferForm.markAllAsTouched();
+    this.errorMessage = 'Please fill out all the fields correctly';
+    this.feedBackExists = true;
     return;
   }
+  this.errorMessage = 'Transfer in progress.';
+  this.feedBackExists = true;
 
-  const { recipientID, Amount } = this.transferForm.value;
+  const { recipientID, amount } = this.transferForm.value;
   const token = this.cookie.get('jwt');
 
-  this.http.post<{message: string}>(`${environment.apiUrl}/transfer`, { recipientID, amount: Amount }, {
+  this.http.post<{message: string}>(`${environment.apiUrl}/transfer`, { recipientID, amount }, {
     headers: { Authorization: `Bearer ${token}` },
     withCredentials: true
   }).subscribe({
     next: data => {
       this.errorMessage = data.message;
       this.transferForm.reset();
-      this.balance -= Amount;
+      this.balance -= amount;
     },
-    error: err => this.errorMessage = err.error.message || 'Transfer Failed'
+    error: err => {
+      this.errorMessage = err.error.message || 'Transfer Failed'
+      this.feedBackExists = true;
+    }
 
   });
+}
+
+logout(){
+  this.cookie.delete('jwt','/');
+  this.router.navigate(['/login']);
 }
 
 

@@ -1,16 +1,27 @@
+
+
 @if (showform) {
-    <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
-
-    <label for="username">Username: </label>
-    <input type="text"  id="username" formControlName="username">
-
-    <label for="password">Password: </label>
-    <input type="password" id="password" formControlName="password">
+    <div class="login-div">
+    
+    
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="login-form">
+        <h2>Login</h2>
+    <div class="form-field">
+        <label for="username">Username: </label>
+        <input type="text"  id="username" formControlName="username" placeholder="Enter your username...">
+    </div>
+    
+    <div class="form-field">
+        <label for="password">Password: </label>
+        <input type="password" id="password" formControlName="password" placeholder="Enter your password...">
+    </div>
 
     <button type="submit">Login</button>
 
+    @if(feedBackExists){<p class="feedback">{{ errorMessage }}</p>}
 </form>
-<p>{{ errorMessage }}</p>
+</div>
+
 }@else {
-    <p>Redirecting...</p>
+    <p class="redirect">Redirecting...</p>
 }
