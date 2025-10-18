@@ -45,7 +45,7 @@ public class SecurityConfig {
 @Bean
 public UrlBasedCorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOrigins(Arrays.asList("http://localhost:4200")); 
+    config.setAllowedOrigins(Arrays.asList("https://secure-funds-transfer-application.vercel.app")); 
     config.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization"));
     config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     config.setAllowCredentials(true); 
