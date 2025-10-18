@@ -7,6 +7,8 @@ import { authGuard } from './guards/auth-guard';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
-  { path: 'transfer', component: Transfer, canActivate: [authGuard] }
+  { path: 'transfer', component: Transfer, canActivate: [authGuard] },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: '**', redirectTo: 'login', pathMatch: 'full' }
 ];
  
