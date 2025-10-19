@@ -142,6 +142,12 @@ public ResponseEntity<Map<String, String>> transferBalance(@RequestBody Transfer
             return ResponseEntity.status(404).body(Map.of("message", "Recipient account not found"));
         }
 
+
+        if(senderAccount.equals(receiverAccount)){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message","Sender and Receiver cannot be the same account"));
+        }
+
+
         if (request.getAmount() == null || senderAccount.getBalance().compareTo(request.getAmount()) < 0) {
             return ResponseEntity.badRequest().body(Map.of("message", "Invalid or insufficient amount"));
 }
