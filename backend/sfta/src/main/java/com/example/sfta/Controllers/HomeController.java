@@ -44,15 +44,6 @@ private BCryptPasswordEncoder passwordEncoder;
 @Autowired
 private JwUtil jwUtil;
 
-@GetMapping("/users")
-public String getUsers() {
-    return userRepository.findAll().toString();
-}
-
-@GetMapping("/accounts")
-public String getAccounts() {
-    return accountsRepository.findAll().toString();
-}
 
 
 @PostMapping("/login")
