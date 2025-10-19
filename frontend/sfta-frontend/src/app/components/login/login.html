@@ -16,7 +16,7 @@
         <input type="password" id="password" formControlName="password" placeholder="Enter your password...">
     </div>
 
-    <button type="submit">Login</button>
+    <button type="submit" [disabled]="userForm.invalid">Login</button>
 
     @if(feedBackExists){<p class="feedback">{{ errorMessage }}</p>}
 </form>
