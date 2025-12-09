@@ -117,9 +117,9 @@ public class HomeController {
 
     ResponseCookie cookie = ResponseCookie.from("jwt", "")
         .httpOnly(true)
-        .secure(false)
+        .secure(true)
         .path("/")
-        .sameSite("Lax")
+        .sameSite("None")
         .maxAge(0)
         .build();
     response.addHeader("Set-Cookie", cookie.toString());
