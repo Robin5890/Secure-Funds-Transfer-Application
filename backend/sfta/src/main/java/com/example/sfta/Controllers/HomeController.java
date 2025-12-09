@@ -42,9 +42,9 @@ public class HomeController {
 
       ResponseCookie cookie = ResponseCookie.from("jwt", token)
           .httpOnly(true)
-          .secure(false)
+          .secure(true)
           .path("/")
-          .sameSite("Lax")
+          .sameSite("None")
           .maxAge(24 * 60 * 60)
           .build();
 
