@@ -90,19 +90,36 @@ button:disabled:hover {
   background-color: #6c757d;
 }
 
-
-
 .feedback {
   margin-top: 1rem;
   font-weight: 600;
-  color: #28a745;
   text-align: center;
 }
 
-.feedback:has(.error) {
-  color: #dc3545;
+.feedback.success {
+  color: #28a745; /* green for success */
 }
 
+.feedback.error {
+  color: #dc3545; /* red for error */
+}
+
+.user-info-btn {
+  background-color: #007bff; /* Blue */
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  width: auto;
+  min-width: 80px;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.user-info-btn:hover {
+  background-color: #0056b3;
+}
 
 .header {
   width: 100%;
@@ -113,6 +130,7 @@ button:disabled:hover {
   right: 0;
   z-index: 100;
   position: fixed;
+  gap: 0.5rem;
 }
 
 .logout-btn {
@@ -129,5 +147,3 @@ button:disabled:hover {
 .logout-btn:hover {
   background-color: #c82333;
 }
-
-
