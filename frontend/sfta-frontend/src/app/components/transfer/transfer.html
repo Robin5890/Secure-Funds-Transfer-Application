@@ -1,49 +1,54 @@
 
 <div class="header">
+  <button class="user-info-btn" (click)="GotoUserInfo()">User Info</button>
+  <button class="user-info-btn" (click)="GotoHistory()">History</button>
   <button class="logout-btn" (click)="logout()">Logout</button>
 </div>
+
+
 
 <div class="userInfo">
   <p>Welcome, {{ username }}!</p>
   <p>Current Balance: ${{ balance }}</p>
 </div>
 
-
 <div class="transfer-form">
   <form [formGroup]="transferForm" (ngSubmit)="onSubmit()">
 
-  <p>Tranfer Balance</p>
+    <p>Transfer Balance</p>
 
-  <div class="form-field">
-    <label for="recipientID">Recipient Account Number:</label>
-    <input type="text" id="recipientID" formControlName="recipientID" placeholder="e.g. ACC1001">
+    <div class="form-field">
+      <label for="recipientID">Recipient Account Number:</label>
+      <input type="text" id="recipientID" formControlName="recipientID" placeholder="e.g. ACC1001">
       @if (transferForm.get('recipientID')?.touched && transferForm.get('recipientID')?.invalid) {
-        <p class="feedback">
+        <p class="feedback error">
           @if (transferForm.get('recipientID')?.errors?.['required']) { Recipient ID is required. }
           @if (transferForm.get('recipientID')?.errors?.['pattern']) { Only letters and numbers are allowed. }
         </p>
       }
-  </div>
+    </div>
 
-  <div class="form-field">
-    <label for="amount">Amount:</label>
-    <input type="text" id="amount" formControlName="amount" placeholder="Enter amount to send">
-        @if (transferForm.get('amount')?.touched && transferForm.get('amount')?.invalid) {
-          <p class="feedback">
-            @if (transferForm.get('amount')?.errors?.['pattern']) { Enter a valid number. }
-            @if (transferForm.get('amount')?.errors?.['required']) { Amount is required. }
-            @if (transferForm.get('amount')?.errors?.['min']) { Amount must be positive. }
-            
-          </p>
-        }
-  </div>
-  
-  <button type="submit" [disabled]="transferForm.invalid">Submit Transfer</button>
+    <div class="form-field">
+      <label for="amount">Amount:</label>
+      <input type="text" id="amount" formControlName="amount" placeholder="Enter amount to send">
+      @if (transferForm.get('amount')?.touched && transferForm.get('amount')?.invalid) {
+        <p class="feedback error">
+          @if (transferForm.get('amount')?.errors?.['pattern']) { Enter a valid number. }
+          @if (transferForm.get('amount')?.errors?.['required']) { Amount is required. }
+          @if (transferForm.get('amount')?.errors?.['min']) { Amount must be positive. }
+        </p>
+      }
+    </div>
 
-  @if(feedBackExists){
-    <p class="feedback">{{ errorMessage }}</p>
-       }
-</form>
+    <button type="submit" [disabled]="transferForm.invalid">Submit Transfer</button>
 
+    @if(feedBackExists){
+      <p class="feedback"
+         [class.error]="feedbackType === 'error'"
+         [class.success]="feedbackType === 'success'">
+        {{ errorMessage }}
+      </p>
+    }
+
+  </form>
 </div>
-
