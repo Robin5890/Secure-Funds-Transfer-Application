@@ -13,37 +13,34 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwUtil {
 
-    private static final String SECRET = "cB2pCDD19BfjgiR9Tsw40j6zyNz0uhxZ";
-    private static final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
-    public static final long EXPIRATION_TIME = 1000 * 60 * 60;
+  private static final String SECRET = "cB2pCDD19BfjgiR9Tsw40j6zyNz0uhxZ";
+  private static final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+  public static final long EXPIRATION_TIME = 24 * 60 * 60 * 1000;
 
-    public String generateToken(String username){
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SECRET_KEY)
-                .compact();
-    }
+  public String generateToken(Integer id) {
+    return Jwts.builder()
+        .setSubject(id.toString())
+        .setIssuedAt(new Date())
+        .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+        .signWith(SECRET_KEY)
+        .compact();
+  }
 
+  private Claims extractAllClaims(String token) {
+    return Jwts.parserBuilder()
+        .setSigningKey(SECRET_KEY)
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
+  }
 
-    private Claims extractAllClaims(String token){
-        return Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-    }
+  public Integer extractUserId(String token) {
+    String subject = extractAllClaims(token).getSubject();
+    return Integer.parseInt(subject);
+  }
 
-
-    public String extractUsername(String token){
-        return extractAllClaims(token).getSubject();
-    }
-
-    public boolean isTokenValid(String token){
-        return !extractAllClaims(token).getExpiration().before(new Date());
-    }
-
-
+  public boolean isTokenValid(String token) {
+    return !extractAllClaims(token).getExpiration().before(new Date());
+  }
 
 }

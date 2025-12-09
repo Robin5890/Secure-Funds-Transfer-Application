@@ -1,158 +1,130 @@
 package com.example.sfta.Controllers;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.sfta.Config.JwUtil;
 import com.example.sfta.DTO.LoginRequest;
+import com.example.sfta.DTO.TransactionHistory;
 import com.example.sfta.DTO.TransferRequest;
 import com.example.sfta.DTO.UserData;
-import com.example.sfta.model.Account;
+import com.example.sfta.Services.LoginService;
+import com.example.sfta.Services.TransferService;
 import com.example.sfta.model.User;
-import com.example.sfta.repository.AccountsRepository;
-import com.example.sfta.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
-
-
-
-
-
-
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 public class HomeController {
 
-@Autowired
-private UserRepository userRepository;
+  @Autowired
+  private LoginService loginService;
 
-@Autowired
-private AccountsRepository accountsRepository;
+  @Autowired
+  private TransferService transferService;
 
-@Autowired
-private BCryptPasswordEncoder passwordEncoder;
+  @PostMapping("/login")
+  public ResponseEntity<Map<String, String>> auth(@RequestBody LoginRequest request, HttpServletResponse response) {
 
-@Autowired
-private JwUtil jwUtil;
+    try {
 
+      String token = loginService.login(request.getUsername(), request.getPassword());
 
+      ResponseCookie cookie = ResponseCookie.from("jwt", token)
+          .httpOnly(true)
+          .secure(false)
+          .path("/")
+          .sameSite("Lax")
+          .maxAge(24 * 60 * 60)
+          .build();
 
-@PostMapping("/login")
-public ResponseEntity<Map<String, String>> auth(@RequestBody LoginRequest request) {
-   
-    User user = userRepository.findByUsername(request.getUsername()).orElse(null);
+      response.addHeader("Set-Cookie", cookie.toString());
+      return ResponseEntity.ok(Map.of("message", "Login successful"));
 
-    if(user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())){
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid username or password"));
+    } catch (RuntimeException e) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body(Map.of("message", e.getMessage()));
     }
-   
-  
-    String token = jwUtil.generateToken(user.getUsername());
+  }
 
+  @GetMapping("/getUserData")
+  public ResponseEntity<?> userData(HttpServletRequest request) {
 
-   return ResponseEntity.ok(Map.of("message", "Login successful", "token", token));
-     
-}
+    User user = (User) SecurityContextHolder.getContext()
+        .getAuthentication()
+        .getPrincipal();
 
+    try {
+      UserData data = loginService.getUserData(user);
+      return ResponseEntity.ok(data);
 
+    } catch (RuntimeException e) {
+      return ResponseEntity.status(404)
+          .body(Map.of("message", e.getMessage()));
+    }
+  }
 
+  @PostMapping("/transfer")
+  public ResponseEntity<?> transfer(@RequestBody TransferRequest request) {
 
-@GetMapping("/getUserData")
-public ResponseEntity<UserData> userData(HttpServletRequest request) {
+    User user = (User) SecurityContextHolder.getContext()
+        .getAuthentication()
+        .getPrincipal();
 
-        
-        String header = request.getHeader("Authorization");
-        if (header == null || !header.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).build();
-        }
+    try {
+      transferService.transferFunds(
+          user,
+          request.getRecipientID(),
+          request.getAmount());
 
-        String token = header.substring(7);
+      return ResponseEntity.ok(Map.of("message", "Transfer complete"));
 
-        if (!jwUtil.isTokenValid(token)) {
-            return ResponseEntity.status(401).build();
-        }
+    } catch (RuntimeException e) {
+      return ResponseEntity.badRequest()
+          .body(Map.of("message", e.getMessage()));
+    }
+  }
 
+  @GetMapping("/api/getTransferHistory")
+  public ResponseEntity<?> getTransferHistory() {
 
-        String username = jwUtil.extractUsername(token);
+    User user = (User) SecurityContextHolder.getContext()
+        .getAuthentication()
+        .getPrincipal();
 
-        User user = userRepository.findByUsername(username).orElse(null);
-        if (user == null) {
-            return ResponseEntity.status(404).build();
-        }
+    try {
+      List<TransactionHistory> history = transferService.getTransferHistory(user);
+      return ResponseEntity.ok(history);
 
-        Account account = accountsRepository.findByUser(user).orElse(null);
-        if (account == null) {
-            return ResponseEntity.status(404).build();
-        }
+    } catch (RuntimeException e) {
+      return ResponseEntity.status(404)
+          .body(Map.of("message", e.getMessage()));
+    }
+  }
 
-        UserData dto = new UserData(user.getUsername(), account.getBalance());
+  @PostMapping("/api/logout")
+  public ResponseEntity<Void> logout(HttpServletResponse response) {
 
-        return ResponseEntity.ok(dto);
-}
+    ResponseCookie cookie = ResponseCookie.from("jwt", "")
+        .httpOnly(true)
+        .secure(false)
+        .path("/")
+        .sameSite("Lax")
+        .maxAge(0)
+        .build();
+    response.addHeader("Set-Cookie", cookie.toString());
+    return ResponseEntity.ok().build();
 
-
-@PostMapping("/transfer")
-@Transactional
-public ResponseEntity<Map<String, String>> transferBalance(@RequestBody TransferRequest request, HttpServletRequest serverRequest) {
-   
-    String header = serverRequest.getHeader("Authorization");
-        if (header == null || !header.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(Map.of("message", "Missing or invalid token"));
-        }
-
-        String token = header.substring(7);
-
-        if (!jwUtil.isTokenValid(token)) {
-            return ResponseEntity.status(401).body(Map.of("message", "Invalid token"));
-        }
-
-
-        String username = jwUtil.extractUsername(token);
-
-        User user = userRepository.findByUsername(username).orElse(null);
-        if (user == null) {
-            return ResponseEntity.status(404).body(Map.of("message", "User not found"));
-        }
-
-        Account senderAccount = accountsRepository.findByUser(user).orElse(null);
-        if (senderAccount == null) {
-            return ResponseEntity.status(404).body(Map.of("message", "Sender account not found"));
-        }
-
-        Account receiverAccount = accountsRepository.findByAccountNumber(request.getRecipientID()).orElse(null);
-        if (receiverAccount == null) {
-            return ResponseEntity.status(404).body(Map.of("message", "Recipient account not found"));
-        }
-
-
-        if(senderAccount.equals(receiverAccount)){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message","Sender and Receiver cannot be the same account"));
-        }
-
-
-        if (request.getAmount() == null || senderAccount.getBalance().compareTo(request.getAmount()) < 0) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Invalid or insufficient amount"));
-}
-
-
-        senderAccount.setBalance(senderAccount.getBalance().subtract(request.getAmount()));
-        receiverAccount.setBalance(receiverAccount.getBalance().add(request.getAmount()));
-
-        accountsRepository.save(senderAccount);
-        accountsRepository.save(receiverAccount);
-
-        return ResponseEntity.ok(Map.of("message", "Transfer complete"));
-}
-
-
+  }
 
 }

@@ -1,0 +1,30 @@
+<div class="userInfo">
+  <h2>{{ username }}'s Transaction History</h2>
+</div>
+
+@if (transactions.length > 0) {
+  <div class="history-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Sender</th>
+          <th>Receiver</th>
+          <th>Amount</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (t of transactions; track t) {
+          <tr>
+            <td>{{ t.senderAccount }}</td>
+            <td>{{ t.receiverAccount }}</td>
+            <td>${{ t.amount }}</td>
+            <td>{{ t.timestamp }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else {
+  <p class="feedback">{{ errorMessage || 'No transactions found.' }}</p>
+}

@@ -8,43 +8,48 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.WebUtils;
 
 import com.example.sfta.model.User;
 import com.example.sfta.repository.UserRepository;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JWTFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private UserRepository userRepository;
+  @Autowired
+  private UserRepository userRepository;
 
-    @Autowired
-    private JwUtil jwUtil;
+  @Autowired
+  private JwUtil jwUtil;
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+  @Override
+  protected void doFilterInternal(HttpServletRequest request,
+      HttpServletResponse response,
+      FilterChain filterChain)
+      throws ServletException, IOException {
 
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
-            if (jwUtil.isTokenValid(token)) {
-                String username = jwUtil.extractUsername(token);
-                User user = userRepository.findByUsername(username).orElse(null);
-                if (user != null) {
-                    UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(user, null, List.of());
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-                }
-            }
+    Cookie cookie = WebUtils.getCookie(request, "jwt");
+    if (cookie != null) {
+      String token = cookie.getValue();
+      if (token != null) {
+        if (jwUtil.isTokenValid(token)) {
+          Integer id = jwUtil.extractUserId(token);
+          User user = userRepository.findById(id).orElse(null);
+          if (user != null) {
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, List.of());
+            SecurityContextHolder.getContext().setAuthentication(auth);
+          }
         }
-        filterChain.doFilter(request, response);
+      }
     }
-}
 
+    filterChain.doFilter(request, response);
+  }
+
+}
